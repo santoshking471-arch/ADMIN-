@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Orders</title>
+
+<style>
+body{
+  font-family:Arial;
+  background:#f1f5f9;
+  padding:10px;
+}
+
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.tab{
+  padding:10px;
+  background:white;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.active{
+  background:#2874f0;
+  color:white;
+}
+
+.card{
+  background:white;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:8px;
+}
+
+button{
+  padding:6px;
+  margin-top:5px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.confirmBtn{
+  background:#22c55e;
+  color:white;
+}
+
+.deleteBtn{
+  background:red;
+  color:white;
+}
+</style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+</head>
+
+<body>
+
+<h2>🛒 Manage Orders</h2>
+
+<div class="tabs">
+  <div id="pendingTab" class="tab active" onclick="showTab('pending')">🆕 Pending</div>
+  <div id="confirmTab" class="tab" onclick="showTab('confirmed')">✅ Confirmed</div>
+</div>
+
+<div id="orderList"></div>
+
+<script>
+
+// 🔥 CONFIG
+const firebaseConfig = {
+apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
+authDomain: "reselling-store-c103e.firebaseapp.com",
+projectId: "reselling-store-c103e"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+const ADMIN_EMAIL = "santoshking471@gmail.com";
+
+let currentTab = "pending";
+
+// 🔐 ADMIN CHECK
+auth.onAuthStateChanged(user=>{
+  if(!user){
+    window.location.href="index.html";
+    return;
+  }
+
+  if(user.email !== ADMIN_EMAIL){
+    alert("Not Admin 😤");
+    auth.signOut();
+    return;
+  }
+
+  loadOrders();
+});
+
+// 🔄 TAB SWITCH
+function showTab(tab){
+
+  currentTab = tab;
+
+  document.getElementById("pendingTab").classList.remove("active");
+  document.getElementById("confirmTab").classList.remove("active");
+
+  if(tab === "pending"){
+    document.getElementById("pendingTab").classList.add("active");
+  } else {
+    document.getElementById("confirmTab").classList.add("active");
+  }
+
+  loadOrders();
+}
+
+// 🔥 LOAD ORDERS
+function loadOrders(){
+
+  db.collection("orders")
+  .where("status","==",currentTab)
+  .orderBy("createdAt","desc")
+  .onSnapshot(snap=>{
+
+    let html="";
+
+    snap.forEach(doc=>{
+      let o = doc.data();
+
+      html += `
+      <div class="card">
+        <b>${o.productName}</b><br>
+        ₹${o.productPrice}<br>
+        👤 ${o.name || "No Name"}<br>
+        📞 ${o.mobile || "-"}<br>
+        📍 ${o.address || "-"}<br>
+      `;
+
+      // 👉 Pending → Confirm button
+      if(currentTab === "pending"){
+        html += `
+        <button class="confirmBtn" onclick="confirmOrder('${doc.id}')">
+          ✔ Confirm Order
+        </button>
+        `;
+      }
+
+      // 👉 Confirmed → Delete button
+      if(currentTab === "confirmed"){
+        html += `
+        <button class="deleteBtn" onclick="deleteOrder('${doc.id}')">
+          🗑 Delete Order
+        </button>
+        `;
+      }
+
+      html += `</div>`;
+    });
+
+    if(snap.empty){
+      html = "<p>No orders 😐</p>";
+    }
+
+    document.getElementById("orderList").innerHTML = html;
+
+  });
+
+}
+
+// ✅ CONFIRM ORDER
+function confirmOrder(id){
+
+  db.collection("orders").doc(id).update({
+    status: "confirmed"
+  });
+
+}
+
+// 🗑 DELETE ORDER
+function deleteOrder(id){
+
+  if(confirm("Delete this order? 😐")){
+    db.collection("orders").doc(id).delete();
+  }
+
+}
+
+</script>
+
+</body>
+</html>
