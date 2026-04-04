@@ -132,7 +132,6 @@ function showTab(tab){
 function loadOrders(){
 
   db.collection("orders")
-  .where("status","==",currentTab)
   .orderBy("createdAt","desc")
   .onSnapshot(snap=>{
 
