@@ -1,300 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
+  <title>Login</title>
+</head>
+<body style="text-align:center; margin-top:100px; font-family:sans-serif;">
 
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f1f5f9;
-}
+<h2>Admin Login 🔐</h2>
 
-/* HEADER */
-header{
-  background: linear-gradient(45deg,#2874f0,#1c5ed6);
-  padding:10px;
-  color:white;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+<input type="email" id="email" placeholder="Email"><br><br>
+<input type="password" id="password" placeholder="Password"><br><br>
 
-.left{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
+<button onclick="login()">Login</button>
 
-.logo{
-  width:35px;
-  height:35px;
-  border-radius:50%;
-}
-
-.brand{
-  font-size:22px;
-  font-weight:bold;
-  font-family:'Orbitron', sans-serif;
-  background: linear-gradient(90deg, #5dade2, #a569bd, #f39c12);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.right{
-  display:flex;
-  gap:15px;
-  font-size:22px;
-  cursor:pointer;
-}
-
-.menuBtn{
-  font-size:24px;
-  cursor:pointer;
-}
-
-/* MENU */
-#menuBox{
-  display:none;
-  position:absolute;
-  top:60px;
-  left:10px;
-  background:white;
-  padding:10px;
-  border-radius:8px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.2);
-}
-
-#menuBox div{
-  padding:8px;
-  cursor:pointer;
-}
-
-#menuBox div:hover{
-  background:#eee;
-}
-
-/* CONTENT */
-.container{
-  padding:10px;
-}
-
-.card{
-  background:#fff;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:8px;
-}
-
-input{
-  width:100%;
-  padding:8px;
-  margin-bottom:8px;
-}
-
-button{
-  padding:8px;
-  width:100%;
-  background:#22c55e;
-  color:#fff;
-  border:none;
-  margin-top:5px;
-}
-</style>
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
-
-<!-- 🔥 Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-</head>
-
-<body>
-
-<header>
-  <div class="left">
-    <span class="menuBtn" onclick="toggleMenu()">☰</span>
-    <img src="https://i.imgur.com/N8BVXRG.jpeg" class="logo">
-    <span class="brand">TyFenix</span>
-  </div>
-
-  <div class="right">
-    <span onclick="manageOrders()">🛅</span>
-    <span onclick="logout()">👤</span>
-  </div>
-</header>
-
-<!-- MENU -->
-<div id="menuBox">
-  <div onclick="manageUsers()">👤 Manage Users</div>
-  <div onclick="manageOrders()">🛒 Manage Orders</div>
-  <div onclick="manageProducts()">📦 Manage Products</div>
-</div>
-
-<!-- CONTENT -->
-<div class="container" id="content"></div>
 
 <script>
-
-// 🔥 CONFIG
 const firebaseConfig = {
-apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
-authDomain: "reselling-store-c103e.firebaseapp.com",
-projectId: "reselling-store-c103e"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-const db = firebase.firestore();
-const auth = firebase.auth();
+function login(){
+  let email = document.getElementById("email").value;
+  let pass = document.getElementById("password").value;
 
-// 👑 ADMIN EMAIL
-const ADMIN_EMAIL = "santoshking471@gmail.com";
-
-// 🔐 LOGIN CHECK
-auth.onAuthStateChanged(user=>{
-  if(!user){
-    alert("Login first 😒");
-    window.location.href = "index.html";
+  // 🔥 Only your email allowed
+  if(email !== "santoshking471@gmail.com"){
+    alert("Access Denied ❌");
     return;
   }
 
-  if(user.email !== ADMIN_EMAIL){
-    alert("Not Admin 😤");
-    window.location.href = "index.html";
-    return;
-  }
-
-  manageOrders(); // default load
-});
-
-// ☰ MENU
-function toggleMenu(){
-  let m = document.getElementById("menuBox");
-  m.style.display = (m.style.display === "block") ? "none" : "block";
-}
-
-// 👤 USERS
-function manageUsers(){
-  document.getElementById("content").innerHTML = "<h3>Users</h3>";
-
-  db.collection("users").onSnapshot(data=>{
-    let html="<h3>Users</h3>";
-
-    data.forEach(doc=>{
-      let u = doc.data();
-
-      html += `
-      <div class="card">
-        <p>${u.email || "No Email"}</p>
-        <p>${u.uid}</p>
-      </div>`;
-    });
-
-    document.getElementById("content").innerHTML = html;
+  firebase.auth().signInWithEmailAndPassword(email, pass)
+  .then(()=>{
+    window.location.href = "home.html";
+  })
+  .catch(()=>{
+    alert("Login Failed 😢");
   });
 }
-
-// 🛒 ORDERS
-function manageOrders(){
-
-  db.collection("orders").orderBy("createdAt","desc")
-  .onSnapshot(data=>{
-
-    let html="<h3>Orders</h3>";
-
-    data.forEach(doc=>{
-      let o = doc.data();
-
-      html += `
-      <div class="card">
-        <h4>${o.productName}</h4>
-        <p>₹${o.productPrice}</p>
-        <p>${o.name} | ${o.mobile}</p>
-        <p>${o.address}</p>
-
-        <button onclick="deleteOrder('${doc.id}')">Delete</button>
-      </div>`;
-    });
-
-    document.getElementById("content").innerHTML = html;
-  });
-}
-
-// 📦 PRODUCTS
-function manageProducts(){
-
-  let html = `
-  <h3>Add Product</h3>
-  <input id="pname" placeholder="Name">
-  <input id="pprice" placeholder="Price">
-  <input id="pimage" placeholder="Image URL">
-  <button onclick="addProduct()">Add</button>
-
-  <h3>Products</h3>
-  <div id="plist"></div>
-  `;
-
-  document.getElementById("content").innerHTML = html;
-
-  db.collection("products").onSnapshot(data=>{
-    let phtml="";
-
-    data.forEach(doc=>{
-      let p = doc.data();
-
-      phtml += `
-      <div class="card">
-        <img src="${p.image}" style="width:100px">
-        <h4>${p.name}</h4>
-        <p>₹${p.price}</p>
-        <button onclick="deleteProduct('${doc.id}')">Delete</button>
-      </div>`;
-    });
-
-    document.getElementById("plist").innerHTML = phtml;
-  });
-}
-
-// ➕ ADD PRODUCT
-function addProduct(){
-
-  let name = document.getElementById("pname").value;
-  let price = document.getElementById("pprice").value;
-  let image = document.getElementById("pimage").value;
-
-  if(!name || !price || !image){
-    alert("Fill all 😒");
-    return;
-  }
-
-  db.collection("products").add({
-    name, price, image,
-    createdAt: new Date()
-  });
-
-  alert("Added 😎");
-}
-
-// ❌ DELETE
-function deleteOrder(id){
-  db.collection("orders").doc(id).delete();
-}
-
-function deleteProduct(id){
-  db.collection("products").doc(id).delete();
-}
-
-// 🔓 LOGOUT
-function logout(){
-  auth.signOut().then(()=>{
-    window.location.href="index.html";
-  });
-}
-
 </script>
 
 </body>
