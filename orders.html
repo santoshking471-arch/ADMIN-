@@ -77,13 +77,9 @@ button{
 
 // 🔥 CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
-  authDomain: "reselling-store-c103e.firebaseapp.com",
-  databaseURL: "https://reselling-store-c103e-default-rtdb.firebaseio.com",
-  projectId: "reselling-store-c103e",
-  storageBucket: "reselling-store-c103e.firebasestorage.app",
-  messagingSenderId: "411682468136",
-  appId: "1:411682468136:web:79cc2b622148f42a62e01d"
+apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
+authDomain: "reselling-store-c103e.firebaseapp.com",
+projectId: "reselling-store-c103e"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -140,18 +136,24 @@ function loadOrders(){
     snap.forEach(doc=>{
       let o = doc.data();
 
+      // 👉 Pending logic
+      if(currentTab === "pending" && o.confirmed) return;
+
+      // 👉 Confirmed logic
+      if(currentTab === "confirmed" && !o.confirmed) return;
+
       html += `
       <div class="card">
         <b>${o.productName}</b><br>
         ₹${o.productPrice}<br>
-        👤 ${o.name || "No Name"}<br>
+        👤 ${o.name || "-"}<br>
+        📧 ${o.email || "-"}<br>
         📞 ${o.mobile || "-"}<br>
         📍 ${o.address || "-"}<br>
-        📌 ${o.pincode || "-"}<br>
-      `; 
+      `;
 
       // 👉 Pending → Confirm button
-      if(currentTab === "pending"){
+      if(!o.confirmed){
         html += `
         <button class="confirmBtn" onclick="confirmOrder('${doc.id}')">
           ✔ Confirm Order
@@ -160,7 +162,7 @@ function loadOrders(){
       }
 
       // 👉 Confirmed → Delete button
-      if(currentTab === "confirmed"){
+      if(o.confirmed){
         html += `
         <button class="deleteBtn" onclick="deleteOrder('${doc.id}')">
           🗑 Delete Order
@@ -171,7 +173,7 @@ function loadOrders(){
       html += `</div>`;
     });
 
-    if(snap.empty){
+    if(html === ""){
       html = "<p>No orders 😐</p>";
     }
 
@@ -183,20 +185,16 @@ function loadOrders(){
 
 // ✅ CONFIRM ORDER
 function confirmOrder(id){
-
   db.collection("orders").doc(id).update({
-    status: "confirmed"
+    confirmed: true
   });
-
 }
 
 // 🗑 DELETE ORDER
 function deleteOrder(id){
-
-  if(confirm("Delete this order? 😐")){
+  if(confirm("Delete order? 😐")){
     db.collection("orders").doc(id).delete();
   }
-
 }
 
 </script>
