@@ -113,6 +113,7 @@ header{
   <div onclick="manageUsers()">👤 Manage Users</div>
   <div onclick="manageOrders()">🛒 Manage Orders</div>
   <div onclick="manageProducts()">📦 Manage Products</div>
+  <div onclick="uploadProduct()">➕ Upload Product</div>
 </div>
 
 <!-- DASHBOARD -->
@@ -194,7 +195,10 @@ function manageUsers(){
 }
 function manageOrders(){ alert("Orders Page 😎"); }
 function manageProducts(){ alert("Products Page 😎"); }
-
+function uploadProduct(){
+  window.location.href = "upload.html";
+}
+  
 // 🔥 DASHBOARD DATA LOAD
 function loadDashboard(){
 
