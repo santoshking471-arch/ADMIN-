@@ -114,7 +114,7 @@ auth.onAuthStateChanged(user=>{
 // 🔄 TAB SWITCH
 function showTab(tab){
   currentTab = tab;
-  renderOrders(); // 👉 reload UI only
+  loadOrders(); // 🔥 reload
 }
 
   document.getElementById("pendingTab").classList.remove("active");
@@ -143,11 +143,13 @@ function showTab(tab){
 
       // 🔥 SAFE FILTER
       
-// Pending tab
-if(currentTab === "pending" && o.confirmed === true) return;
+if(currentTab === "pending"){
+        if(o.confirmed === true) return;
+      }
 
-// Confirmed tab
-if(currentTab === "confirmed" && o.confirmed !== true) return;
+      if(currentTab === "confirmed"){
+        if(o.confirmed !== true) return;
+      }
       
       html += `
       <div class="card">
