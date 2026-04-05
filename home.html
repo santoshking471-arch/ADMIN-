@@ -206,10 +206,22 @@ function uploadProduct(){
 // 🔥 DASHBOARD DATA LOAD
 function loadDashboard(){
 
-  // USERS COUNT
-  db.collection("users").onSnapshot(snap=>{
-    document.getElementById("totalUsers").innerText = snap.size;
+  // USERS COUNT (FIXED)
+db.collection("users").onSnapshot(snap=>{
+
+  let uniqueUsers = new Set();
+
+  snap.forEach(doc=>{
+    let data = doc.data();
+
+    if(data.email){
+      uniqueUsers.add(data.email);
+    }
   });
+
+  document.getElementById("totalUsers").innerText = uniqueUsers.size;
+
+});
 
   // ORDERS COUNT + REVENUE
   db.collection("orders").onSnapshot(snap=>{
