@@ -80,7 +80,7 @@ const firebaseConfig = {
   authDomain: "reselling-store-c103e.firebaseapp.com",
   databaseURL: "https://reselling-store-c103e-default-rtdb.firebaseio.com",
   projectId: "reselling-store-c103e",
-  storageBucket: "reselling-store-c103e.appspot.com",
+  storageBucket: "reselling-store-c103e.firebasestorage.app",
   messagingSenderId: "411682468136",
   appId: "1:411682468136:web:79cc2b622148f42a62e01d"
 };
@@ -138,7 +138,11 @@ function loadOrders(){
 
 }
 
-
+function confirmOrder(id){
+  db.collection("orders").doc(id).update({
+    confirmed: true
+  });
+          }
 // 🗑 DELETE
 function deleteOrder(id){
   if(confirm("Delete order? 😐")){
