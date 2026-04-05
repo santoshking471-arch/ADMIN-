@@ -137,7 +137,6 @@ function loadOrders(){
   });
 
 }
-loadOrders();
 
 
 // 🗑 DELETE
@@ -146,7 +145,7 @@ function deleteOrder(id){
     db.collection("orders").doc(id).delete();
   }
 }
-
+loadOrders();
 </script>
 
 </body>
