@@ -90,46 +90,53 @@ const db = firebase.firestore();
 
 
 // 🔥 LOAD ORDERS (REALTIME)
-db.collection("orders").onSnapshot(snapshot=>{
+function loadOrders(){
 
-  let html = "";
+  db.collection("orders")
+  .onSnapshot(snap=>{
 
-  snapshot.forEach(doc=>{
-    let o = doc.data();
+    let html="";
 
-    html += `
-    <div class="card ${o.done ? 'done' : ''}">
-      
-      <b style="font-size:18px;">${o.productName || "No Product"}</b><br>
-      💰 ₹${o.productPrice || 0}<br><br>
+    snap.forEach(doc=>{
+      let o = doc.data();
 
-      👤 ${o.name || "-"}<br>
-      📧 ${o.email || "-"}<br>
-      📞 ${o.mobile || "-"}<br>
-      📍 ${o.address || "-"}<br>
+      // 👉 CARD COLOR CHANGE
+      let cardClass = o.confirmed === true ? "card confirmedCard" : "card";
 
-      ${
-        !o.done 
-        ? `<button class="confirmBtn" onclick="markDone('${doc.id}')">✔ Mark Done</button>` 
-        : `<span>✅ Delivered</span>`
+      html += `
+      <div class="${cardClass}">
+        <b>${o.productName}</b><br>
+        ₹${o.productPrice}<br>
+        👤 ${o.name || "-"}<br>
+        📧 ${o.email || "-"}<br>
+        📞 ${o.mobile || "-"}<br>
+        📍 ${o.address || "-"}<br>
+      `;
+
+      // 👉 Pending button
+      if(o.confirmed !== true){
+        html += `
+        <button class="confirmBtn" onclick="confirmOrder('${doc.id}')">
+          ✔ Confirm
+        </button>`;
       }
 
-      <br>
+      // 👉 Confirmed button
+      if(o.confirmed === true){
+        html += `
+        <button class="deleteBtn" onclick="deleteOrder('${doc.id}')">
+          🗑 Delete
+        </button>`;
+      }
 
-      <button class="deleteBtn" onclick="deleteOrder('${doc.id}')">🗑 Delete</button>
+      html += `</div>`;
+    });
 
-    </div>
-    `;
+    document.getElementById("orderList").innerHTML = html || "No Orders 😐";
+
   });
 
-  if(html === ""){
-    html = "<h3 style='color:white;'>😐 No Orders Found</h3>";
-  }
-
-  document.getElementById("orderList").innerHTML = html;
-
-});
-
+}
 
 // ✅ MARK DONE (GREEN CARD)
 function markDone(id){
