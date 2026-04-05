@@ -113,8 +113,9 @@ auth.onAuthStateChanged(user=>{
 
 // 🔄 TAB SWITCH
 function showTab(tab){
-
   currentTab = tab;
+  renderOrders(); // 👉 reload UI only
+}
 
   document.getElementById("pendingTab").classList.remove("active");
   document.getElementById("confirmTab").classList.remove("active");
@@ -129,10 +130,10 @@ function showTab(tab){
 }
 
 // 🔥 LOAD ORDERS
-function loadOrders(){
+
+     function loadOrders(){
 
   db.collection("orders")
-  .orderBy("createdAt","desc")
   .onSnapshot(snap=>{
 
     let html="";
@@ -140,11 +141,14 @@ function loadOrders(){
     snap.forEach(doc=>{
       let o = doc.data();
 
-      // 👉 Pending logic
-      if(currentTab === "pending" && o.confirmed) return;
+      // 🔥 SAFE FILTER
+      if(currentTab === "pending"){
+        if(o.confirmed === true) return;
+      }
 
-      // 👉 Confirmed logic
-      if(currentTab === "confirmed" && !o.confirmed) return;
+      if(currentTab === "confirmed"){
+        if(o.confirmed !== true) return;
+      }
 
       html += `
       <div class="card">
@@ -156,30 +160,24 @@ function loadOrders(){
         📍 ${o.address || "-"}<br>
       `;
 
-      // 👉 Pending → Confirm button
-      if(!o.confirmed){
+      // 👉 Pending button
+      if(o.confirmed !== true){
         html += `
-        <button class="confirmBtn" onclick="confirmOrder('${doc.id}')">
-          ✔ Confirm Order
-        </button>
-        `;
+        <button onclick="confirmOrder('${doc.id}')">
+          ✔ Confirm
+        </button>`;
       }
 
-      // 👉 Confirmed → Delete button
-      if(o.confirmed){
+      // 👉 Confirmed button
+      if(o.confirmed === true){
         html += `
-        <button class="deleteBtn" onclick="deleteOrder('${doc.id}')">
-          🗑 Delete Order
-        </button>
-        `;
+        <button onclick="deleteOrder('${doc.id}')">
+          🗑 Delete
+        </button>`;
       }
 
       html += `</div>`;
     });
-
-    if(html === ""){
-      html = "<p>No orders 😐</p>";
-    }
 
     document.getElementById("orderList").innerHTML = html;
 
@@ -191,6 +189,10 @@ function loadOrders(){
 function confirmOrder(id){
   db.collection("orders").doc(id).update({
     confirmed: true
+  }).then(()=>{
+    console.log("Confirmed:", id);
+  }).catch(err=>{
+    console.error(err);
   });
 }
 
