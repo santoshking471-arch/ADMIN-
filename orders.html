@@ -11,40 +11,29 @@ body{
   padding:10px;
 }
 
-.tabs{
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-.tab{
-  padding:10px;
-  background:white;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.active{
-  background:#2874f0;
-  color:white;
-}
-
 .card{
   background:white;
-  padding:10px;
+  padding:12px;
   margin-bottom:10px;
-  border-radius:8px;
+  border-radius:10px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* ✅ DONE = GREEN */
+.done{
+  background:#dcfce7;
+  border-left:5px solid #22c55e;
 }
 
 button{
-  padding:6px;
+  padding:6px 10px;
   margin-top:5px;
   border:none;
   border-radius:5px;
   cursor:pointer;
 }
 
-.confirmBtn{
+.markBtn{
   background:#22c55e;
   color:white;
 }
@@ -64,12 +53,7 @@ button{
 
 <body>
 
-<h2>🛒 Manage Orders</h2>
-
-<div class="tabs">
-  <div id="pendingTab" class="tab active" onclick="showTab('pending')">🆕 Pending</div>
-  <div id="confirmTab" class="tab" onclick="showTab('confirmed')">✅ Confirmed</div>
-</div>
+<h2>🛒 All Orders</h2>
 
 <div id="orderList"></div>
 
@@ -77,13 +61,9 @@ button{
 
 // 🔥 CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
-  authDomain: "reselling-store-c103e.firebaseapp.com",
-  databaseURL: "https://reselling-store-c103e-default-rtdb.firebaseio.com",
-  projectId: "reselling-store-c103e",
-  storageBucket: "reselling-store-c103e.firebasestorage.app",
-  messagingSenderId: "411682468136",
-  appId: "1:411682468136:web:79cc2b622148f42a62e01d"
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -92,8 +72,6 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 const ADMIN_EMAIL = "santoshking471@gmail.com";
-
-let currentTab = "pending";
 
 // 🔐 ADMIN CHECK
 auth.onAuthStateChanged(user=>{
@@ -111,92 +89,71 @@ auth.onAuthStateChanged(user=>{
   loadOrders();
 });
 
-// 🔄 TAB SWITCH
-function showTab(tab){
-  currentTab = tab;
 
-  // 👉 active tab change
-  document.getElementById("pendingTab").classList.remove("active");
-  document.getElementById("confirmTab").classList.remove("active");
-
-  if(tab === "pending"){
-    document.getElementById("pendingTab").classList.add("active");
-  } else {
-    document.getElementById("confirmTab").classList.add("active");
-  }
-  
-
-  // ✔ अब सही जगह
-                                                         }
-
-// 🔥 LOAD ORDERS
-
-     function loadOrders(){
+// 🔥 LOAD ORDERS (Realtime)
+function loadOrders(){
 
   db.collection("orders")
+  .orderBy("createdAt","desc") // optional
   .onSnapshot(snap=>{
 
-    let html="";
+    let html = "";
 
     snap.forEach(doc=>{
       let o = doc.data();
+      let id = doc.id;
 
-      // 🔥 SAFE FILTER
-      
-if(currentTab === "pending"){
-        if(o.confirmed === true) return;
+      // default false
+      if(o.done === undefined){
+        o.done = false;
       }
 
-      if(currentTab === "confirmed"){
-        if(o.confirmed !== true) return;
-      }
-      
       html += `
-      <div class="card">
+      <div class="card ${o.done ? 'done' : ''}">
         <b>${o.productName}</b><br>
-        ₹${o.productPrice}<br>
+        ₹${o.productPrice}<br><br>
+
         👤 ${o.name || "-"}<br>
         📧 ${o.email || "-"}<br>
         📞 ${o.mobile || "-"}<br>
         📍 ${o.address || "-"}<br>
       `;
 
-      // 👉 Pending button
-      if(o.confirmed !== true){
+      // ✅ MARK DONE BUTTON
+      if(!o.done){
         html += `
-        <button onclick="confirmOrder('${doc.id}')">
-          ✔ Confirm
+        <button class="markBtn" onclick="markDone('${id}')">
+          ✔ Mark Done
         </button>`;
       }
 
-      // 👉 Confirmed button
-      if(o.confirmed === true){
-        html += `
-        <button onclick="deleteOrder('${doc.id}')">
-          🗑 Delete
-        </button>`;
-      }
+      // 🗑 DELETE
+      html += `
+      <button class="deleteBtn" onclick="deleteOrder('${id}')">
+        🗑 Delete
+      </button>
+      `;
 
       html += `</div>`;
     });
-    if(html === "") html = "<p>No orders 😐</p>";
 
     document.getElementById("orderList").innerHTML = html;
 
   });
-
 }
 
-// ✅ CONFIRM ORDER
-function confirmOrder(id){
+
+// ✅ MARK DONE
+function markDone(id){
   db.collection("orders").doc(id).update({
-    confirmed: true
+    done: true
   });
 }
 
-// 🗑 DELETE ORDER
+
+// 🗑 DELETE
 function deleteOrder(id){
-  if(confirm("Delete order? 😐")){
+  if(confirm("Delete order?")){
     db.collection("orders").doc(id).delete();
   }
 }
