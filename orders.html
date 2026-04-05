@@ -29,7 +29,7 @@ h2{
   animation:fadeIn 0.4s ease;
 }
 
-.card.done{
+.confirmedCard{
   background:linear-gradient(135deg,#22c55e,#16a34a);
   color:white;
 }
@@ -138,12 +138,7 @@ function loadOrders(){
 
 }
 
-// ✅ MARK DONE (GREEN CARD)
-function markDone(id){
-  db.collection("orders").doc(id).update({
-    done: true
-  });
-}
+
 
 
 // 🗑 DELETE
