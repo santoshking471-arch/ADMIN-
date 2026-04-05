@@ -114,9 +114,8 @@ auth.onAuthStateChanged(user=>{
 // 🔄 TAB SWITCH
 function showTab(tab){
   currentTab = tab;
-  loadOrders(); // 🔥 reload
-}
 
+  // 👉 active tab change
   document.getElementById("pendingTab").classList.remove("active");
   document.getElementById("confirmTab").classList.remove("active");
 
@@ -126,8 +125,8 @@ function showTab(tab){
     document.getElementById("confirmTab").classList.add("active");
   }
 
-  loadOrders();
-}
+  // ✔ अब सही जगह
+                                                         }
 
 // 🔥 LOAD ORDERS
 
@@ -179,6 +178,7 @@ if(currentTab === "pending"){
 
       html += `</div>`;
     });
+    if(html === "") html = "<p>No orders 😐</p>";
 
     document.getElementById("orderList").innerHTML = html;
 
