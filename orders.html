@@ -2,32 +2,46 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orders Panel</title>
 
 <style>
 body{
   font-family:Arial;
-  background:#f1f5f9;
-  padding:10px;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  padding:15px;
+  color:#333;
+}
+
+h2{
+  color:white;
+}
+
+#orderList{
+  margin-top:15px;
 }
 
 .card{
   background:white;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:10px;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+  animation:fadeIn 0.4s ease;
 }
 
-/* ✅ Confirmed = green */
-.done{
-  background:#bbf7d0;
+.card.done{
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  color:white;
 }
 
 button{
-  padding:6px;
-  margin-top:6px;
+  padding:8px 12px;
+  margin-top:8px;
+  margin-right:5px;
   border:none;
-  border-radius:5px;
+  border-radius:6px;
   cursor:pointer;
+  font-size:14px;
 }
 
 .confirmBtn{
@@ -36,8 +50,13 @@ button{
 }
 
 .deleteBtn{
-  background:red;
+  background:#ef4444;
   color:white;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
 }
 </style>
 
@@ -51,76 +70,78 @@ button{
 
 <h2>🛒 All Orders</h2>
 
-<div id="orderList"></div>
+<div id="orderList">Loading...</div>
 
 <script>
 
-// 🔥 CONFIG (same)
+// 🔥 FIREBASE CONFIG (same tera)
 const firebaseConfig = {
   apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
   authDomain: "reselling-store-c103e.firebaseapp.com",
+  databaseURL: "https://reselling-store-c103e-default-rtdb.firebaseio.com",
   projectId: "reselling-store-c103e",
+  storageBucket: "reselling-store-c103e.appspot.com",
+  messagingSenderId: "411682468136",
+  appId: "1:411682468136:web:79cc2b622148f42a62e01d"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔥 LOAD ORDERS (REALTIME)
-db.collection("orders").orderBy("createdAt","desc")
-.onSnapshot(snapshot=>{
 
-  let html="";
+// 🔥 LOAD ORDERS (REALTIME)
+db.collection("orders").onSnapshot(snapshot=>{
+
+  let html = "";
 
   snapshot.forEach(doc=>{
     let o = doc.data();
 
     html += `
     <div class="card ${o.done ? 'done' : ''}">
-      <b>${o.productName}</b><br>
-      ₹${o.productPrice}<br>
+      
+      <b style="font-size:18px;">${o.productName || "No Product"}</b><br>
+      💰 ₹${o.productPrice || 0}<br><br>
 
       👤 ${o.name || "-"}<br>
       📧 ${o.email || "-"}<br>
       📞 ${o.mobile || "-"}<br>
       📍 ${o.address || "-"}<br>
+
+      ${
+        !o.done 
+        ? `<button class="confirmBtn" onclick="markDone('${doc.id}')">✔ Mark Done</button>` 
+        : `<span>✅ Delivered</span>`
+      }
+
+      <br>
+
+      <button class="deleteBtn" onclick="deleteOrder('${doc.id}')">🗑 Delete</button>
+
+    </div>
     `;
-
-    // ✔ Confirm button (only pending)
-    if(!o.done){
-      html += `
-      <button class="confirmBtn" onclick="confirmOrder('${doc.id}')">
-        ✔ Confirm
-      </button>`;
-    }
-
-    // 🗑 Delete button (always)
-    html += `
-    <button class="deleteBtn" onclick="deleteOrder('${doc.id}')">
-      🗑 Delete
-    </button>
-    `;
-
-    html += `</div>`;
   });
 
-  if(html===""){
-    html = "<p>No Orders 😐</p>";
+  if(html === ""){
+    html = "<h3 style='color:white;'>😐 No Orders Found</h3>";
   }
 
   document.getElementById("orderList").innerHTML = html;
 
 });
 
-// ✅ CONFIRM = GREEN
-function confirmOrder(id){
+
+// ✅ MARK DONE (GREEN CARD)
+function markDone(id){
   db.collection("orders").doc(id).update({
     done: true
   });
 }
 
-// ❌ DELETE
+
+// 🗑 DELETE
 function deleteOrder(id){
-  if(confirm("Delete order?")){
+  if(confirm("Delete order? 😐")){
     db.collection("orders").doc(id).delete();
   }
 }
