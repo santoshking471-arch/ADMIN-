@@ -2,7 +2,6 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manage Orders</title>
 
 <style>
 body{
@@ -16,24 +15,22 @@ body{
   padding:12px;
   margin-bottom:10px;
   border-radius:10px;
-  box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* ✅ DONE = GREEN */
+/* ✅ Confirmed = green */
 .done{
-  background:#dcfce7;
-  border-left:5px solid #22c55e;
+  background:#bbf7d0;
 }
 
 button{
-  padding:6px 10px;
-  margin-top:5px;
+  padding:6px;
+  margin-top:6px;
   border:none;
   border-radius:5px;
   cursor:pointer;
 }
 
-.markBtn{
+.confirmBtn{
   background:#22c55e;
   color:white;
 }
@@ -58,96 +55,75 @@ button{
 
 <script>
 
-// 🔥 YOUR CONFIG (same)
+// 🔥 CONFIG (same)
 const firebaseConfig = {
   apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
   authDomain: "reselling-store-c103e.firebaseapp.com",
-  databaseURL: "https://reselling-store-c103e-default-rtdb.firebaseio.com",
   projectId: "reselling-store-c103e",
-  storageBucket: "reselling-store-c103e.firebasestorage.app",
-  messagingSenderId: "411682468136",
-  appId: "1:411682468136:web:79cc2b622148f42a62e01d"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
 
-
 // 🔥 LOAD ORDERS (REALTIME)
-function loadOrders(){
+db.collection("orders").orderBy("createdAt","desc")
+.onSnapshot(snapshot=>{
 
-  db.collection("orders")
-  .onSnapshot(snap=>{
+  let html="";
 
-    let html = "";
+  snapshot.forEach(doc=>{
+    let o = doc.data();
 
-    snap.forEach(doc=>{
-      let o = doc.data();
-      let id = doc.id;
+    html += `
+    <div class="card ${o.done ? 'done' : ''}">
+      <b>${o.productName}</b><br>
+      ₹${o.productPrice}<br>
 
-      if(o.done === undefined){
-        o.done = false;
-      }
+      👤 ${o.name || "-"}<br>
+      📧 ${o.email || "-"}<br>
+      📞 ${o.mobile || "-"}<br>
+      📍 ${o.address || "-"}<br>
+    `;
 
+    // ✔ Confirm button (only pending)
+    if(!o.done){
       html += `
-      <div class="card ${o.done ? 'done' : ''}">
-        <b>${o.productName}</b><br>
-        ₹${o.productPrice}<br><br>
-
-        👤 ${o.name || "-"}<br>
-        📧 ${o.email || "-"}<br>
-        📞 ${o.mobile || "-"}<br>
-        📍 ${o.address || "-"}<br>
-      `;
-
-      // ✅ MARK DONE
-      if(!o.done){
-        html += `
-        <button class="markBtn" onclick="markDone('${id}')">
-          ✔ Mark Done
-        </button>`;
-      }
-
-      // 🗑 DELETE
-      html += `
-      <button class="deleteBtn" onclick="deleteOrder('${id}')">
-        🗑 Delete
-      </button>
-      `;
-
-      html += `</div>`;
-    });
-
-    if(html === ""){
-      html = "<p>No orders 😐</p>";
+      <button class="confirmBtn" onclick="confirmOrder('${doc.id}')">
+        ✔ Confirm
+      </button>`;
     }
 
-    document.getElementById("orderList").innerHTML = html;
+    // 🗑 Delete button (always)
+    html += `
+    <button class="deleteBtn" onclick="deleteOrder('${doc.id}')">
+      🗑 Delete
+    </button>
+    `;
 
+    html += `</div>`;
   });
 
-}
+  if(html===""){
+    html = "<p>No Orders 😐</p>";
+  }
 
+  document.getElementById("orderList").innerHTML = html;
 
-// ✅ MARK DONE
-function markDone(id){
+});
+
+// ✅ CONFIRM = GREEN
+function confirmOrder(id){
   db.collection("orders").doc(id).update({
     done: true
   });
 }
 
-
-// 🗑 DELETE
+// ❌ DELETE
 function deleteOrder(id){
   if(confirm("Delete order?")){
     db.collection("orders").doc(id).delete();
   }
 }
-
-
-// 🚀 START
-loadOrders();
 
 </script>
 
