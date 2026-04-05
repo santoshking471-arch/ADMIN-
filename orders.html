@@ -142,14 +142,13 @@ function showTab(tab){
       let o = doc.data();
 
       // 🔥 SAFE FILTER
-      if(currentTab === "pending"){
-        if(o.confirmed === true) return;
-      }
+      
+// Pending tab
+if(currentTab === "pending" && o.confirmed === true) return;
 
-      if(currentTab === "confirmed"){
-        if(o.confirmed !== true) return;
-      }
-
+// Confirmed tab
+if(currentTab === "confirmed" && o.confirmed !== true) return;
+      
       html += `
       <div class="card">
         <b>${o.productName}</b><br>
@@ -189,10 +188,6 @@ function showTab(tab){
 function confirmOrder(id){
   db.collection("orders").doc(id).update({
     confirmed: true
-  }).then(()=>{
-    console.log("Confirmed:", id);
-  }).catch(err=>{
-    console.error(err);
   });
 }
 
