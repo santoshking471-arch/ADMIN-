@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Staff</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f0f4ff;
+        margin: 0;
+        padding: 0;
+    }
+
+    .header {
+        background-color: #0b2e6f;
+        color: #fff;
+        padding: 20px;
+        font-size: 24px;
+        font-weight: bold;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .staff-card {
+        background-color: #fff;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        width: 300px;
+        padding: 20px;
+        transition: transform 0.2s;
+    }
+
+    .staff-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .staff-card.approved {
+        background-color: #cce0ff; /* Blue card */
+    }
+
+    .staff-card h3 {
+        margin: 0 0 10px 0;
+        color: #0b2e6f;
+    }
+
+    .staff-card p {
+        margin: 4px 0;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .staff-card button {
+        margin-top: 10px;
+        padding: 10px;
+        width: 100%;
+        border: none;
+        border-radius: 50px;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s;
+    }
+
+    .approve-btn {
+        background-color: #0b2e6f;
+        color: #fff;
+    }
+
+    .approve-btn:hover {
+        background-color: #15509b;
+    }
+
+    .deny-btn {
+        background-color: #ff4d4d;
+        color: #fff;
+    }
+
+    .deny-btn:hover {
+        background-color: #ff1a1a;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="header">Manage Staff</div>
+
+<div class="cards-container" id="cardsContainer">
+    Loading staff data...
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+<script>
+  // Firebase config
+  const firebaseConfig = {
+  apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
+  authDomain: "reselling-store-c103e.firebaseapp.com",
+  databaseURL: "https://reselling-store-c103e-default-rtdb.firebaseio.com",
+  projectId: "reselling-store-c103e",
+  storageBucket: "reselling-store-c103e.firebasestorage.app",
+  messagingSenderId: "411682468136",
+  appId: "1:411682468136:web:79cc2b622148f42a62e01d"
+};
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Ensure only admin sees this page
+  auth.onAuthStateChanged(user => {
+      if(!user){
+          window.location.href = "index.html";
+          return;
+      }
+
+      // Optional: check if user is admin
+      db.collection("admins").doc(user.uid).get().then(doc => {
+          if(!doc.exists){
+              alert("Access Denied. Admin only.");
+              auth.signOut();
+              window.location.href = "index.html";
+          } else {
+              loadStaffCards();
+          }
+      });
+  });
+
+  function loadStaffCards(){
+      const container = document.getElementById("cardsContainer");
+      container.innerHTML = "Loading staff data...";
+      db.collection("staff").onSnapshot(snapshot => {
+          container.innerHTML = "";
+          snapshot.forEach(doc => {
+              const data = doc.data();
+              const card = document.createElement("div");
+              card.className = "staff-card " + (data.approved ? "approved" : "");
+
+              let fieldsHtml = "";
+              for(const key in data){
+                  fieldsHtml += `<p><strong>${key}:</strong> ${data[key]}</p>`;
+              }
+
+              let buttonHtml = "";
+              if(data.approved){
+                  buttonHtml = `<button class="deny-btn" onclick="changeApproval('${doc.id}', false)">Deny Access</button>`;
+              } else {
+                  buttonHtml = `<button class="approve-btn" onclick="changeApproval('${doc.id}', true)">Approve</button>`;
+              }
+
+              card.innerHTML = `<h3>${data.fullName || data.email}</h3>` + fieldsHtml + buttonHtml;
+
+              container.appendChild(card);
+          });
+      });
+  }
+
+  function changeApproval(staffId, approve){
+      const msg = approve ? "approve" : "deny";
+      if(confirm(`Are you sure you want to ${msg} this staff?`)){
+          db.collection("staff").doc(staffId).update({approved: approve})
+          .then(()=> alert(`Staff ${approve ? "approved" : "access denied"}!`))
+          .catch(err => alert("Error: " + err.message));
+      }
+  }
+</script>
+
+</body>
+</html>
