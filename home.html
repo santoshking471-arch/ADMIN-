@@ -114,6 +114,7 @@ header{
   <div onclick="manageOrders()">🛒 Manage Orders</div>
   <div onclick="manageProducts()">📦 Manage Products</div>
   <div onclick="uploadProduct()">➕ Upload Product</div>
+  <div onclick="managestaff()">🛗 Manage Staff</div>
 </div>
 
 <!-- DASHBOARD -->
@@ -202,10 +203,10 @@ function manageProducts(){
 function uploadProduct(){
   window.location.href = "upload.html";
 }
-  
+function manageStaff(){
+  window.location.href = "staff.html";
 // 🔥 DASHBOARD DATA LOAD
 function loadDashboard(){
-
   // USERS COUNT (FIXED)
 db.collection("users").onSnapshot(snap=>{
 
