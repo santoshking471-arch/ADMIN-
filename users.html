@@ -70,7 +70,6 @@ button{
 <div id="userList"></div>
 
 <script>
-
 // 🔥 CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
@@ -87,38 +86,39 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// 🔐 ADMIN CHECK (Multiple Admins)
+// 🔐 ADMIN LIST
 const ADMIN_EMAILS = ["santoshking471@gmail.com", "sidarrani368@gmail.com"];
 
 let allUsers = [];
 
 // 🔐 ADMIN CHECK
-auth.onAuthStateChanged(user=>{
-  if(!user){
-    window.location.href="index.html";
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "index.html";
     return;
   }
 
-  if(user.email !== ADMIN_EMAIL){
+  // Check if current user is in Admin list
+  if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
     alert("Not Admin 😤");
     auth.signOut();
+    window.location.href = "index.html";
     return;
   }
 
+  console.log("Admin Verified ✅");
   loadUsers();
 });
 
 // 🔥 LOAD USERS
-function loadUsers(){
-
-  db.collection("users").onSnapshot(snap=>{
-
+function loadUsers() {
+  db.collection("users").onSnapshot(snap => {
     allUsers = [];
-    snap.forEach(doc=>{
+    snap.forEach(doc => {
       let u = doc.data();
 
-      // ❌ admin hide
-      if(u.email === ADMIN_EMAIL) return;
+      // ❌ Admins ko user list mein nahi dikhana hai
+      if (ADMIN_EMAILS.includes((u.email || "").toLowerCase())) return;
 
       allUsers.push({
         id: doc.id,
@@ -127,35 +127,35 @@ function loadUsers(){
     });
 
     document.getElementById("totalUsers").innerText = allUsers.length;
-
     renderUsers(allUsers);
+  }, error => {
+    console.error("Error loading users:", error);
+    document.getElementById("userList").innerHTML = "<p style='color:red;'>Permission Denied ❌ Check Firebase Rules.</p>";
   });
-
 }
 
 // 🔍 SEARCH FILTER
-function filterUsers(){
+function filterUsers() {
   let text = document.getElementById("search").value.toLowerCase();
-
   let filtered = allUsers.filter(u =>
     (u.email || "").toLowerCase().includes(text)
   );
-
   renderUsers(filtered);
 }
 
 // 🎨 RENDER USERS
-function renderUsers(list){
-
+function renderUsers(list) {
   let html = "";
-  let count = 1;
+  if (list.length === 0) {
+    document.getElementById("userList").innerHTML = "<p style='padding:10px;'>No users found 😐</p>";
+    return;
+  }
 
-  list.forEach(u=>{
-
+  list.forEach((u, index) => {
     html += `
     <div class="card">
-      <b>${count}. ${u.email}</b><br>
-      UID: ${u.id}<br><br>
+      <b>${index + 1}. ${u.email || "No Email"}</b><br>
+      <small>UID: ${u.id}</small><br><br>
 
       <button class="viewBtn" onclick="viewOrders('${u.id}')">📦 Orders</button>
       <button class="deleteBtn" onclick="deleteUser('${u.id}')">🗑 Delete</button>
@@ -166,63 +166,58 @@ function renderUsers(list){
       <div id="orders-${u.id}"></div>
     </div>
     `;
-
-    count++;
   });
 
   document.getElementById("userList").innerHTML = html;
 }
 
 // 🗑 DELETE
-function deleteUser(id){
-  if(confirm("Delete user? 😐")){
+function deleteUser(id) {
+  if (confirm("Delete user? 😐")) {
     db.collection("users").doc(id).delete();
   }
 }
 
 // 🚫 BLOCK
-function toggleBlock(id, status){
+function toggleBlock(id, status) {
   db.collection("users").doc(id).update({
     blocked: !status
+  }).then(() => {
+    alert(status ? "User Unblocked" : "User Blocked");
   });
 }
 
 // 📦 VIEW ORDERS
-function viewOrders(uid){
-
-  let box = document.getElementById("orders-"+uid);
-
-  if(box.innerHTML !== ""){
+function viewOrders(uid) {
+  let box = document.getElementById("orders-" + uid);
+  if (box.innerHTML !== "") {
     box.innerHTML = "";
     return;
   }
 
   db.collection("orders")
-  .where("userId","==",uid)
-  .onSnapshot(snap=>{
-
-    let html = "<b>User Orders:</b>";
-
-    snap.forEach(doc=>{
-      let o = doc.data();
-
-      html += `
-      <div class="orderBox">
-        ${o.productName} - ₹${o.productPrice}
-      </div>`;
+    .where("userId", "==", uid)
+    .get() // Yahan get() use karna better hai for single view
+    .then(snap => {
+      let html = "<div class='orderBox'><b>User Orders:</b><br>";
+      if (snap.empty) {
+        html += "No orders found 😐";
+      } else {
+        snap.forEach(doc => {
+          let o = doc.data();
+          html += `• ${o.productName} - ₹${o.productPrice}<br>`;
+        });
+      }
+      html += "</div>";
+      box.innerHTML = html;
+    })
+    .catch(err => {
+      console.error(err);
+      box.innerHTML = "<p style='color:red;'>Error loading orders</p>";
     });
-
-    if(snap.empty){
-      html += "<p>No orders 😐</p>";
-    }
-
-    box.innerHTML = html;
-
-  });
-
 }
-
 </script>
 
+        
 </body>
 </html>
