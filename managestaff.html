@@ -148,8 +148,9 @@
                 <h3>${data.fullName}</h3>
                 <p><strong>Email:</strong> ${data.email}</p>
                 <p><strong>Mobile:</strong> ${data.mobile}</p>
-                <p><strong>Status:</strong> ${data.status || 'Pending'}</p>
-                <button class="approve-btn" onclick="approveStaff('${doc.id}')">Approve Now</button>
+                <p><strong>Status:</strong> ${data.status || }</p>
+                <button class="approve-btn" onclick="alert('TAP DETECTED!'); approveStaff('${doc.id}')">Approve Now</button>
+
                 <button class="deny-btn" onclick="deleteRequest('${doc.id}')">Reject</button>
               `;
               container.appendChild(card);
