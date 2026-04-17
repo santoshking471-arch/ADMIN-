@@ -20,6 +20,8 @@
         font-weight: bold;
         text-align: center;
         box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        position: relative;
+        z-index: 100;
     }
 
     .cards-container {
@@ -28,6 +30,8 @@
         justify-content: center;
         gap: 20px;
         padding: 20px;
+        position: relative;
+        z-index: 1;
     }
 
     .staff-card {
@@ -37,14 +41,13 @@
         width: 300px;
         padding: 20px;
         transition: transform 0.2s;
+        position: relative;
+        z-index: 5;
+        pointer-events: auto;
     }
 
     .staff-card:hover {
         transform: translateY(-5px);
-    }
-
-    .staff-card.approved {
-        background-color: #cce0ff; /* Blue card */
     }
 
     .staff-card h3 {
@@ -60,7 +63,7 @@
 
     .staff-card button {
         margin-top: 10px;
-        padding: 10px;
+        padding: 15px; /* Thoda bada kiya tap ke liye */
         width: 100%;
         border: none;
         border-radius: 50px;
@@ -68,6 +71,9 @@
         cursor: pointer;
         font-weight: bold;
         transition: background 0.3s;
+        position: relative;
+        z-index: 9999 !important;
+        touch-action: manipulation;
     }
 
     .approve-btn {
@@ -75,20 +81,12 @@
         color: #fff;
     }
 
-    .approve-btn:hover {
-        background-color: #15509b;
-    }
-
     .deny-btn {
         background-color: #ff4d4d;
         color: #fff;
     }
-
-    .deny-btn:hover {
-        background-color: #ff1a1a;
-    }
-
 </style>
+
 </head>
 <body>
 
