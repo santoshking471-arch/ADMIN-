@@ -87,7 +87,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-const ADMIN_EMAIL = "santoshking471@gmail.com";
+// 🔐 ADMIN CHECK (Multiple Admins)
+const ADMIN_EMAILS = ["santoshking471@gmail.com", "sidarrani368@gmail.com"];
 
 let allUsers = [];
 
