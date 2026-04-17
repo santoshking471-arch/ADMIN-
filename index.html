@@ -32,11 +32,12 @@ function login(){
   let email = document.getElementById("email").value;
   let pass = document.getElementById("password").value;
 
-  // 🔥 Only your email allowed
-  if(email !== "santoshking471@gmail.com"){
+  // 🔥 Only allowed emails
+if (email !== "santoshking471@gmail.com" && email !== "Sidarrani368@gmail.com") {
     alert("Access Denied ❌");
     return;
-  }
+}
+
 
   firebase.auth().signInWithEmailAndPassword(email, pass)
   .then(()=>{
