@@ -73,8 +73,7 @@ button{
 <div id="orderList"></div>
 
 <script>
-
-// 🔥 FIREBASE CONFIG (same tera)
+// 🔥 FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
   authDomain: "reselling-store-c103e.firebaseapp.com",
@@ -87,84 +86,76 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-firebase.auth().onAuthStateChanged(user => {
+const auth = firebase.auth();
 
-  if (user && (user.email === "santoshking471@gmail.com" || user.email === "sidarrani368@gmail.com")) {
-    // ✅ Dono me se koi bhi email ho → direct orders show
-}
-
-    // ✅ Already logged in → direct orders show
-    loadOrders();
-
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // Email check (Case-sensitive safety ke liye lowerCase kiya hai)
+    let email = user.email.toLowerCase();
+    
+    if (email === "santoshking471@gmail.com" || email === "sidarrani368@gmail.com") {
+        console.log("Admin Verified ✅");
+        loadOrders(); // Sirf Admin ke liye load hoga
+    } else {
+        alert("Not Admin 😤");
+        auth.signOut();
+        window.location.href = "login.html";
+    }
   } else {
-    // ❌ Not logged in → login page
     window.location.href = "login.html";
   }
-
 });
 
 // 🔥 LOAD ORDERS (REALTIME)
 function loadOrders(){
+  db.collection("orders").onSnapshot(snap => {
+    let html = "";
+    if (snap.empty) {
+        document.getElementById("orderList").innerHTML = "No Orders Found 😐";
+        return;
+    }
 
-  db.collection("orders")
-  .onSnapshot(snap=>{
-
-    let html="";
-
-    snap.forEach(doc=>{
+    snap.forEach(doc => {
       let o = doc.data();
-
-      // 👉 CARD COLOR CHANGE
       let cardClass = o.confirmed === true ? "card confirmedCard" : "card";
 
       html += `
       <div class="${cardClass}">
-        <b>${o.productName}</b><br>
-        ₹${o.productPrice}<br>
+        <b>${o.productName || "No Name"}</b><br>
+        ₹${o.productPrice || "0"}<br>
         👤 ${o.name || "-"}<br>
         📧 ${o.email || "-"}<br>
         📞 ${o.mobile || "-"}<br>
         📍 ${o.address || "-"}<br>
       `;
 
-      // 👉 Pending button
       if(o.confirmed !== true){
-        html += `
-        <button class="confirmBtn" onclick="confirmOrder('${doc.id}')">
-          ✔ Confirm
-        </button>`;
-      }
-
-      // 👉 Confirmed button
-      if(o.confirmed === true){
-        html += `
-        <button class="deleteBtn" onclick="deleteOrder('${doc.id}')">
-          🗑 Delete
-        </button>`;
+        html += `<button class="confirmBtn" onclick="confirmOrder('${doc.id}')">✔ Confirm</button>`;
+      } else {
+        html += `<button class="deleteBtn" onclick="deleteOrder('${doc.id}')">🗑 Delete</button>`;
       }
 
       html += `</div>`;
     });
 
-    document.getElementById("orderList").innerHTML = html || "No Orders 😐";
-
+    document.getElementById("orderList").innerHTML = html;
+  }, error => {
+      console.log("Error loading orders:", error);
+      document.getElementById("orderList").innerHTML = "Permission Denied ❌";
   });
-
 }
 
 function confirmOrder(id){
-  db.collection("orders").doc(id).update({
-    confirmed: true
-  });
-          }
-// 🗑 DELETE
+  db.collection("orders").doc(id).update({ confirmed: true });
+}
+
 function deleteOrder(id){
   if(confirm("Delete order? 😐")){
     db.collection("orders").doc(id).delete();
   }
 }
-loadOrders();
 </script>
+
 
 </body>
 </html>
