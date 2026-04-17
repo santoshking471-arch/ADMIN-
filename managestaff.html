@@ -98,81 +98,90 @@
     Loading staff data...
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-  // Firebase config
   const firebaseConfig = {
-  apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
-  authDomain: "reselling-store-c103e.firebaseapp.com",
-  databaseURL: "https://reselling-store-c103e-default-rtdb.firebaseio.com",
-  projectId: "reselling-store-c103e",
-  storageBucket: "reselling-store-c103e.firebasestorage.app",
-  messagingSenderId: "411682468136",
-  appId: "1:411682468136:web:79cc2b622148f42a62e01d"
-};
+    apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
+    authDomain: "reselling-store-c103e.firebaseapp.com",
+    databaseURL: "https://reselling-store-c103e-default-rtdb.firebaseio.com",
+    projectId: "reselling-store-c103e",
+    storageBucket: "reselling-store-c103e.appspot.com", // Fixed bucket
+    messagingSenderId: "411682468136",
+    appId: "1:411682468136:web:79cc2b622148f42a62e01d"
+  };
+
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  // Ensure only admin sees this page
   auth.onAuthStateChanged(user => {
       if(!user){
-          window.location.href = "index.html";
+          // window.location.href = "index.html"; // Isko testing ke liye abhi comment rakh sakte ho
+          loadStaffCards(); // For testing
           return;
       }
-
-      // Optional: check if user is admin
-      db.collection("admins").doc(user.uid).get().then(doc => {
-          if(!doc.exists){
-              alert("Access Denied. Admin only.");
-              auth.signOut();
-              window.location.href = "index.html";
-          } else {
-              loadStaffCards();
-          }
-      });
+      
+      // Admin check logic
+      const adminEmail = user.email;
+      if(adminEmail === "santoshking471@gmail.com" || adminEmail === "sidarrani368@gmail.com") {
+          loadStaffCards();
+      } else {
+          alert("Aap admin nahi ho!");
+          auth.signOut();
+      }
   });
 
   function loadStaffCards(){
       const container = document.getElementById("cardsContainer");
-      container.innerHTML = "Loading staff data...";
-      db.collection("staff").onSnapshot(snapshot => {
-          container.innerHTML = "";
+      // staffRequests collection se data uthana hai jo register se aaya hai
+      db.collection("staffRequests").onSnapshot(snapshot => {
+          container.innerHTML = snapshot.empty ? "No requests found." : "";
           snapshot.forEach(doc => {
               const data = doc.data();
               const card = document.createElement("div");
-              card.className = "staff-card " + (data.approved ? "approved" : "");
+              card.className = "staff-card";
 
-              let fieldsHtml = "";
-              for(const key in data){
-                  fieldsHtml += `<p><strong>${key}:</strong> ${data[key]}</p>`;
-              }
-
-              let buttonHtml = "";
-              if(data.approved){
-                  buttonHtml = `<button class="deny-btn" onclick="changeApproval('${doc.id}', false)">Deny Access</button>`;
-              } else {
-                  buttonHtml = `<button class="approve-btn" onclick="changeApproval('${doc.id}', true)">Approve</button>`;
-              }
-
-              card.innerHTML = `<h3>${data.fullName || data.email}</h3>` + fieldsHtml + buttonHtml;
-
+              card.innerHTML = `
+                <h3>${data.fullName}</h3>
+                <p><strong>Email:</strong> ${data.email}</p>
+                <p><strong>Mobile:</strong> ${data.mobile}</p>
+                <p><strong>Status:</strong> ${data.status || 'Pending'}</p>
+                <button class="approve-btn" onclick="approveStaff('${doc.id}')">Approve Now</button>
+                <button class="deny-btn" onclick="deleteRequest('${doc.id}')">Reject</button>
+              `;
               container.appendChild(card);
           });
       });
   }
 
-  function changeApproval(staffId, approve){
-      const msg = approve ? "approve" : "deny";
-      if(confirm(`Are you sure you want to ${msg} this staff?`)){
-          db.collection("staff").doc(staffId).update({approved: approve})
-          .then(()=> alert(`Staff ${approve ? "approved" : "access denied"}!`))
-          .catch(err => alert("Error: " + err.message));
+  // --- APPROVE LOGIC ---
+  function approveStaff(id) {
+      if(confirm("Bhai, is staff ko approve kar dein?")) {
+          db.collection("staffRequests").doc(id).get().then(doc => {
+              const data = doc.data();
+              data.approved = true;
+              
+              // 1. Pehle 'staff' collection me dalo
+              db.collection("staff").doc(id).set(data).then(() => {
+                  // 2. Phir 'staffRequests' se delete kardo
+                  db.collection("staffRequests").doc(id).delete();
+                  alert("Staff Approved! ✅");
+              }).catch(err => alert("Error saving to staff: " + err.message));
+          });
+      }
+  }
+
+  function deleteRequest(id) {
+      if(confirm("Reject kar dein?")) {
+          db.collection("staffRequests").doc(id).delete()
+          .then(() => alert("Request Rejected."));
       }
   }
 </script>
+
 
 </body>
 </html>
