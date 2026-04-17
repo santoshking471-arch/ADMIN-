@@ -166,20 +166,25 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// 🔐 ADMIN CHECK
-const ADMIN_EMAIL = ["santoshking471@gmail.com","sidarrani368@gmail.com"];
+// 🔐 ADMIN CHECK (Multiple Admins)
+const ADMIN_EMAILS = ["santoshking471@gmail.com", "sidarrani368@gmail.com"];
 
-auth.onAuthStateChanged(user=>{
-  if(!user){
-    window.location.href="index.html";
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "index.html";
     return;
   }
 
-  if(user.email !== ADMIN_EMAIL){
+  // Check karein ki user ka email hamari list mein hai ya nahi
+  if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
     alert("Not Admin 😤");
     auth.signOut();
     return;
   }
+  
+  console.log("Welcome Admin! ✅");
+});
+
 
   loadDashboard();
 });
