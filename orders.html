@@ -89,7 +89,10 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 firebase.auth().onAuthStateChanged(user => {
 
-  if(user && user.email === "santoshking471@gmail.com"){
+  if (user && (user.email === "santoshking471@gmail.com" || user.email === "sidarrani368@gmail.com")) {
+    // ✅ Dono me se koi bhi email ho → direct orders show
+}
+
     // ✅ Already logged in → direct orders show
     loadOrders();
 
