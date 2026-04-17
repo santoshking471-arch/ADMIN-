@@ -67,7 +67,6 @@ button{
 <div id="productList"></div>
 
 <script>
-
 // 🔥 CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
@@ -84,35 +83,35 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// 🔐 ADMIN CHECK (Multiple Admins)
+// 🔐 ADMIN LIST
 const ADMIN_EMAILS = ["santoshking471@gmail.com", "sidarrani368@gmail.com"];
 
 let allProducts = [];
 
 // 🔐 ADMIN CHECK
-auth.onAuthStateChanged(user=>{
-  if(!user){
-    window.location.href="index.html";
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "index.html";
     return;
   }
 
-  if(user.email !== ADMIN_EMAIL){
+  // ✅ Multi-admin support fix
+  if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
     alert("Not Admin 😤");
     auth.signOut();
+    window.location.href = "index.html";
     return;
   }
 
+  console.log("Admin Verified ✅");
   loadProducts();
 });
 
 // 🔥 LOAD PRODUCTS
-function loadProducts(){
-
-  db.collection("products").onSnapshot(snap=>{
-
+function loadProducts() {
+  db.collection("products").onSnapshot(snap => {
     allProducts = [];
-
-    snap.forEach(doc=>{
+    snap.forEach(doc => {
       allProducts.push({
         id: doc.id,
         ...doc.data()
@@ -120,72 +119,71 @@ function loadProducts(){
     });
 
     document.getElementById("totalProducts").innerText = allProducts.length;
-
     renderProducts(allProducts);
+  }, error => {
+    console.error("Error:", error);
+    document.getElementById("productList").innerHTML = "Permission Denied ❌ Check Firebase Rules.";
   });
-
 }
 
 // 🔍 SEARCH
-function filterProducts(){
+function filterProducts() {
   let text = document.getElementById("search").value.toLowerCase();
-
   let filtered = allProducts.filter(p =>
     (p.name || "").toLowerCase().includes(text)
   );
-
   renderProducts(filtered);
 }
 
 // 🎨 RENDER
-function renderProducts(list){
-
+function renderProducts(list) {
   let html = "";
-  let count = 1;
+  if (list.length === 0) {
+    document.getElementById("productList").innerHTML = "No products found 😐";
+    return;
+  }
 
-  list.forEach(p=>{
-
+  list.forEach((p, index) => {
     html += `
     <div class="card">
-      <b>${count}. ${p.name}</b><br>
-      <img src="${p.image}"><br>
-      ₹${p.price}<br><br>
+      <b>${index + 1}. ${p.name || "No Name"}</b><br>
+      <img src="${p.image || 'https://via.placeholder.com/80'}" style="margin:10px 0;"><br>
+      ₹${p.price || "0"}<br><br>
 
       <button class="editBtn" onclick="editProduct('${p.id}', '${p.name}', '${p.price}', '${p.image}')">✏ Edit</button>
       <button class="deleteBtn" onclick="deleteProduct('${p.id}')">🗑 Delete</button>
     </div>
     `;
-
-    count++;
   });
 
   document.getElementById("productList").innerHTML = html;
 }
 
 // 🗑 DELETE
-function deleteProduct(id){
-  if(confirm("Delete product? 😐")){
+function deleteProduct(id) {
+  if (confirm("Delete product? 😐")) {
     db.collection("products").doc(id).delete();
   }
 }
 
 // ✏ EDIT
-function editProduct(id, name, price, image){
-
+function editProduct(id, name, price, image) {
   let newName = prompt("Edit Name:", name);
   let newPrice = prompt("Edit Price:", price);
   let newImage = prompt("Edit Image URL:", image);
 
-  if(newName && newPrice && newImage){
+  if (newName && newPrice && newImage) {
     db.collection("products").doc(id).update({
       name: newName,
       price: newPrice,
       image: newImage
+    }).then(() => {
+      alert("Product updated! ✅");
+    }).catch(err => {
+      alert("Update failed ❌");
     });
   }
-
 }
-
 </script>
 
 </body>
