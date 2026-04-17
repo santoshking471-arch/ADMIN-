@@ -67,8 +67,7 @@ button{
 </div>
 
 <script>
-
-// 🔥 CONFIG
+// 🔥 FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
   authDomain: "reselling-store-c103e.firebaseapp.com",
@@ -80,57 +79,72 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// 🔐 ADMIN CHECK (Multiple Admins)
+// 🔐 ADMIN LIST (Fix)
 const ADMIN_EMAILS = ["santoshking471@gmail.com", "sidarrani368@gmail.com"];
 
 // 🔐 ADMIN CHECK
-auth.onAuthStateChanged(user=>{
-  if(!user){
-    window.location.href="index.html";
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "index.html";
     return;
   }
 
-  if(user.email !== ADMIN_EMAIL){
+  // ✅ Multi-admin fix
+  if (!ADMIN_EMAILS.includes(user.email.toLowerCase())) {
     alert("Not Admin 😤");
     auth.signOut();
+    window.location.href = "index.html";
     return;
   }
+  
+  console.log("Admin Verified: Ready to upload! 🚀");
 });
 
 // 🚀 UPLOAD FUNCTION
 function uploadProduct(){
-
+  const btn = document.querySelector("button");
   let name = document.getElementById("name").value.trim();
   let price = document.getElementById("price").value.trim();
   let image = document.getElementById("image").value.trim();
 
   if(!name || !price || !image){
-    alert("Fill all fields 😒");
+    alert("Saare fields bharo bhai! 😒");
     return;
   }
+
+  // Button disable taaki baar baar click na ho
+  btn.innerText = "Uploading... ⏳";
+  btn.disabled = true;
 
   db.collection("products").add({
     name: name,
     price: Number(price),
     image: image,
-    createdAt: new Date()
+    createdAt: firebase.firestore.FieldValue.serverTimestamp() // Sahi timestamp format
   })
   .then(()=>{
-    alert("Product Uploaded 😎🔥");
+    alert("Product Uploaded Successfully 😎🔥");
 
-    // clear form
+    // Clear form
     document.getElementById("name").value="";
     document.getElementById("price").value="";
     document.getElementById("image").value="";
+    
+    btn.innerText = "Upload Now 🚀";
+    btn.disabled = false;
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Error: " + err.message);
+    btn.innerText = "Upload Now 🚀";
+    btn.disabled = false;
   });
-
 }
-
 </script>
+
 
 </body>
 </html>
