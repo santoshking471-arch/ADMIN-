@@ -209,34 +209,22 @@
 }
          
   // --- APPROVE LOGIC ---
-  async function approveStaff(id) { // 'a' lowercase rakhein
+  async function approveStaff(id) {
     if (!confirm("Bhai, is staff ko approve kar dein?")) return;
 
+    // Optional: Button ko "Processing..." state mein daal sakte ho
     try {
         const docRef = db.collection("staffRequests").doc(id);
         const docSnap = await docRef.get();
-
-        if (!docSnap.exists) {
-            alert("Request nahi mili!");
-            return;
-        }
-
         const data = docSnap.data();
-        // Naye data mein 'approved' status add karna
-        const approvedData = { ...data, status: "approved", approvedAt: new Date() };
-
-        // 1. Staff collection mein add karein
-        await db.collection("staff").doc(id).set(approvedData);
         
-        // 2. Request collection se delete karein
+        await db.collection("staff").doc(id).set({ ...data, status: "approved" });
         await docRef.delete();
 
+        // location.reload(); // ISE HATA DENA!
         alert("Staff Approved ✅");
-        location.reload(); // UI refresh karne ke liye agar zaroorat ho
-
     } catch (err) {
-        console.error("Approval Error:", err);
-        alert("Kuch gadbad ho gayi: " + err.message);
+        alert("Error: " + err.message);
     }
 }
 
