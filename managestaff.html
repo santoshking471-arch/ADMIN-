@@ -134,18 +134,28 @@
 
   function loadStaffCards() {
     const container = document.getElementById("cardsContainer");
-    
+
+    container.innerHTML = `
+        <h2 style="width:100%;text-align:center;">Pending Requests</h2>
+        <div id="pendingBox" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;"></div>
+
+        <h2 style="width:100%;text-align:center;margin-top:30px;">Approved Staff</h2>
+        <div id="approvedBox" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;"></div>
+    `;
+
+    const pendingBox = document.getElementById("pendingBox");
+    const approvedBox = document.getElementById("approvedBox");
+
+    // 🔵 Pending Requests
     db.collection("staffRequests").onSnapshot(snapshot => {
-        container.innerHTML = snapshot.empty ? "No requests found." : "";
-        
+        pendingBox.innerHTML = snapshot.empty ? "No requests found." : "";
+
         snapshot.forEach(doc => {
             const data = doc.data();
-            
-            // 1. Card ka main div banao
+
             const card = document.createElement("div");
             card.className = "staff-card";
 
-            // 2. Sirf text content innerHTML se dalo
             card.innerHTML = `
                 <h3>${data.fullName}</h3>
                 <p><strong>Email:</strong> ${data.email}</p>
@@ -153,32 +163,47 @@
                 <p><strong>Status:</strong> ${data.status || 'Pending'}</p>
             `;
 
-            // 3. Ab yahan wo Button Container wala code lagao
             const btnContainer = document.createElement("div");
             btnContainer.style.display = "flex";
             btnContainer.style.gap = "10px";
-            btnContainer.style.marginTop = "15px"; // Thodi space ke liye
+            btnContainer.style.marginTop = "15px";
 
-            // Approve Button
             const approveBtn = document.createElement("button");
             approveBtn.className = "approve-btn";
-            approveBtn.textContent = "Approve Now";
-            approveBtn.style.flex = "1"; // Dono button barabar size ke honge
+            approveBtn.textContent = "Approve";
             approveBtn.onclick = () => approveStaff(doc.id);
 
-            // Reject Button
             const denyBtn = document.createElement("button");
             denyBtn.className = "deny-btn";
             denyBtn.textContent = "Reject";
-            denyBtn.style.flex = "1";
             denyBtn.onclick = () => deleteRequest(doc.id);
 
-            // 4. Sabko append (jodna) karo
             btnContainer.appendChild(approveBtn);
             btnContainer.appendChild(denyBtn);
             card.appendChild(btnContainer);
-            
-            container.appendChild(card);
+
+            pendingBox.appendChild(card);
+        });
+    });
+
+    // 🟢 Approved Staff
+    db.collection("staff").onSnapshot(snapshot => {
+        approvedBox.innerHTML = snapshot.empty ? "No approved staff." : "";
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+
+            const card = document.createElement("div");
+            card.className = "staff-card";
+
+            card.innerHTML = `
+                <h3>${data.fullName}</h3>
+                <p><strong>Email:</strong> ${data.email}</p>
+                <p><strong>Mobile:</strong> ${data.mobile}</p>
+                <p><strong>Status:</strong> Approved</p>
+            `;
+
+            approvedBox.appendChild(card);
         });
     });
 }
