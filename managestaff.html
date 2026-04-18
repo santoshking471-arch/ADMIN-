@@ -184,30 +184,37 @@
 }
          
   // --- APPROVE LOGIC ---
-  function approveStaff(id) {
-    if(confirm("Bhai, is staff ko approve kar dein?")) {
-        // Step 1: Request data fetch karein
-        db.collection("staffRequests").doc(id).get().then(doc => {
-            if (doc.exists) {
-                const data = doc.data();
-                data.approved = true; // Status update kiya
+  async function approveStaff(id) { // 'a' lowercase rakhein
+    if (!confirm("Bhai, is staff ko approve kar dein?")) return;
 
-                // Step 2: 'staff' collection mein save karein
-                db.collection("staff").doc(id).set(data).then(() => {
-                    
-                    // Step 3: 'staffRequests' se delete karein
-                    db.collection("staffRequests").doc(id).delete().then(() => {
-                        alert("Staff Approved and Moved! ✅");
-                        loadStaffCards(); // UI refresh karne ke liye
-                    });
+    try {
+        const docRef = db.collection("staffRequests").doc(id);
+        const docSnap = await docRef.get();
 
-                }).catch(err => alert("Saving error: " + err.message));
-            } else {
-                alert("Bhai, ye staff request mili hi nahi!");
-            }
-        }).catch(err => alert("Fetch error: " + err.message));
+        if (!docSnap.exists) {
+            alert("Request nahi mili!");
+            return;
+        }
+
+        const data = docSnap.data();
+        // Naye data mein 'approved' status add karna
+        const approvedData = { ...data, status: "approved", approvedAt: new Date() };
+
+        // 1. Staff collection mein add karein
+        await db.collection("staff").doc(id).set(approvedData);
+        
+        // 2. Request collection se delete karein
+        await docRef.delete();
+
+        alert("Staff Approved ✅");
+        location.reload(); // UI refresh karne ke liye agar zaroorat ho
+
+    } catch (err) {
+        console.error("Approval Error:", err);
+        alert("Kuch gadbad ho gayi: " + err.message);
     }
 }
+
 
 
   function deleteRequest(id) {
