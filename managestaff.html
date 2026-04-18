@@ -209,38 +209,41 @@
   }
   
   // --- APPROVE LOGIC (FIXED) ---
-  async function approveStaff(id) {
+    async function approveStaff(id) {
     if (!confirm("Bhai, is staff ko approve kar dein?")) return;
 
     try {
         // 1. Pehle data fetch karo
         const docRef = db.collection("staffRequests").doc(id);
         const docSnap = await docRef.get();
-        
+
         if (!docSnap.exists) {
             alert("Ye request pehle hi hat chuki hai!");
             return;
         }
 
         const data = docSnap.data();
-        
+
         // 2. 'staff' collection mein add karo (ID same rakho)
-        await db.collection("staff").doc(id).set({ 
-            ...data, 
+        await db.collection("staff").doc(id).set({
+            ...data,
             status: "approved",
             approvedAt: new Date() // Date add kar di
         });
-        
+
         // 3. 'staffRequests' se delete karo (Taaki screen se hat jaye)
         await docRef.delete();
-        
+
         alert("Staff Approved successfully! ✅");
-        
+
     } catch (err) {
-        console.error("Error updating document: ", err);
-        alert("Error: " + err.message);
+        // Is line ko change karein
+        alert("Error approving staff: " + (err.message || "Unknown error occurred."));
+        // Ya sirf itna karein
+        // alert("Approve karte waqt koi error aayi!");
     }
-}
+  }
+
 
 
 
