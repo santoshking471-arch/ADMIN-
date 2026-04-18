@@ -158,20 +158,30 @@
 
   // --- APPROVE LOGIC ---
   function approveStaff(id) {
-      if(confirm("Bhai, is staff ko approve kar dein?")) {
-          db.collection("staffRequests").doc(id).get().then(doc => {
-              const data = doc.data();
-              data.approved = true;
-              
-              // 1. Pehle 'staff' collection me dalo
-              db.collection("staff").doc(id).set(data).then(() => {
-                  // 2. Phir 'staffRequests' se delete kardo
-                  db.collection("staffRequests").doc(id).delete();
-                  alert("Staff Approved! ✅");
-              }).catch(err => alert("Error saving to staff: " + err.message));
-          });
-      }
-  }
+    if(confirm("Bhai, is staff ko approve kar dein?")) {
+        // Step 1: Request data fetch karein
+        db.collection("staffRequests").doc(id).get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                data.approved = true; // Status update kiya
+
+                // Step 2: 'staff' collection mein save karein
+                db.collection("staff").doc(id).set(data).then(() => {
+                    
+                    // Step 3: 'staffRequests' se delete karein
+                    db.collection("staffRequests").doc(id).delete().then(() => {
+                        alert("Staff Approved and Moved! ✅");
+                        loadStaffCards(); // UI refresh karne ke liye
+                    });
+
+                }).catch(err => alert("Saving error: " + err.message));
+            } else {
+                alert("Bhai, ye staff request mili hi nahi!");
+            }
+        }).catch(err => alert("Fetch error: " + err.message));
+    }
+}
+
 
   function deleteRequest(id) {
       if(confirm("Reject kar dein?")) {
