@@ -1,243 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manage Staff</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f0f4ff;
-        margin: 0;
-        padding: 0;
-    }
-
-    .header {
-        background-color: #0b2e6f;
-        color: #fff;
-        padding: 20px;
-        font-size: 24px;
-        font-weight: bold;
-        text-align: center;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        position: relative;
-        z-index: 100;
-    }
-
-    .cards-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 20px;
-        padding: 20px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .staff-card {
-        background-color: #fff;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        width: 300px;
-        padding: 20px;
-        transition: transform 0.2s;
-        position: relative;
-        z-index: 5;
-        pointer-events: auto;
-    }
-
-    .staff-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .staff-card h3 {
-        margin: 0 0 10px 0;
-        color: #0b2e6f;
-    }
-
-    .staff-card p {
-        margin: 4px 0;
-        font-size: 14px;
-        color: #333;
-    }
-
-    .staff-card button {
-        margin-top: 10px;
-        padding: 15px; /* Thoda bada kiya tap ke liye */
-        width: 100%;
-        border: none;
-        border-radius: 50px;
-        font-size: 14px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: background 0.3s;
-        position: relative;
-        z-index: 9999 !important;
-        touch-action: manipulation;
-    }
-
-    .approve-btn {
-        background-color: #0b2e6f;
-        color: #fff;
-    }
-
-    .deny-btn {
-        background-color: #ff4d4d;
-        color: #fff;
-    }
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f4ff; margin: 0; padding: 0; }
+        .header { background-color: #0b2e6f; color: #fff; padding: 20px; font-size: 24px; font-weight: bold; text-align: center; }
+        .cards-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .staff-card { background-color: #fff; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 300px; padding: 20px; }
+        .staff-card h3 { margin: 0 0 10px 0; color: #0b2e6f; }
+        .staff-card p { margin: 4px 0; font-size: 14px; color: #333; }
+    </style>
 </head>
 <body>
 
-<div class="header">Manage Staff</div>
-
-<div class="cards-container" id="cardsContainer">
-    Loading staff data...
-</div>
+<div class="header">Approved Staff Members</div>
+<div class="cards-container" id="cardsContainer">Loading data...</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
-    authDomain: "reselling-store-c103e.firebaseapp.com",
-    databaseURL: "https://reselling-store-c103e-default-rtdb.firebaseio.com",
-    projectId: "reselling-store-c103e",
-    storageBucket: "reselling-store-c103e.appspot.com", // Fixed bucket
-    messagingSenderId: "411682468136",
-    appId: "1:411682468136:web:79cc2b622148f42a62e01d"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyCA49EYDbqUnYu1sXs0ETDMIGaWxtoxXOM",
+        projectId: "reselling-store-c103e",
+        // ... (baki config wahi rahega)
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  auth.onAuthStateChanged(user => {
-      if(!user){
-          // window.location.href = "index.html"; // Isko testing ke liye abhi comment rakh sakte ho
-          loadStaffCards(); // For testing
-          return;
-      }
-      
-      // Admin check logic
-      const adminEmail = user.email;
-      if(adminEmail === "santoshking471@gmail.com" || adminEmail === "sidarrani368@gmail.com") {
-          loadStaffCards();
-      } else {
-          alert("Aap admin nahi ho!");
-          auth.signOut();
-      }
-  });
-
-  function loadStaffCards() {
     const container = document.getElementById("cardsContainer");
 
-    container.innerHTML = `
-        <h2 style="width:100%;text-align:center;">Pending Requests</h2>
-        <div id="pendingBox" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;"></div>
-
-        <h2 style="width:100%;text-align:center;margin-top:30px;">Approved Staff</h2>
-        <div id="approvedBox" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;"></div>
-    `;
-
-    const pendingBox = document.getElementById("pendingBox");
-    const approvedBox = document.getElementById("approvedBox");
-
-    // 🔵 Pending Requests
+    // Seedha 'staffRequests' se data load kar rahe hain
     db.collection("staffRequests").onSnapshot(snapshot => {
-        pendingBox.innerHTML = snapshot.empty ? "No requests found." : "";
+        container.innerHTML = ""; 
+        
+        if (snapshot.empty) {
+            container.innerHTML = "<p>Koi data nahi mila!</p>";
+            return;
+        }
 
         snapshot.forEach(doc => {
             const data = doc.data();
-
             const card = document.createElement("div");
             card.className = "staff-card";
-
             card.innerHTML = `
                 <h3>${data.fullName}</h3>
                 <p><strong>Email:</strong> ${data.email}</p>
                 <p><strong>Mobile:</strong> ${data.mobile}</p>
                 <p><strong>Status:</strong> ${data.status || 'Pending'}</p>
             `;
-
-            const btnContainer = document.createElement("div");
-            btnContainer.style.display = "flex";
-            btnContainer.style.gap = "10px";
-            btnContainer.style.marginTop = "15px";
-
-            const approveBtn = document.createElement("button");
-            approveBtn.className = "approve-btn";
-            approveBtn.textContent = "Approve";
-            approveBtn.onclick = () => approveStaff(doc.id);
-
-            const denyBtn = document.createElement("button");
-            denyBtn.className = "deny-btn";
-            denyBtn.textContent = "Reject";
-            denyBtn.onclick = () => deleteRequest(doc.id);
-
-            btnContainer.appendChild(approveBtn);
-            btnContainer.appendChild(denyBtn);
-            card.appendChild(btnContainer);
-
-            pendingBox.appendChild(card);
+            container.appendChild(card);
         });
     });
-
-    // 🟢 Approved Staff
-    db.collection("staff").onSnapshot(snapshot => {
-        approvedBox.innerHTML = snapshot.empty ? "No approved staff." : "";
-
-        snapshot.forEach(doc => {
-            const data = doc.data();
-
-            const card = document.createElement("div");
-            card.className = "staff-card";
-
-            card.innerHTML = `
-                <h3>${data.fullName}</h3>
-                <p><strong>Email:</strong> ${data.email}</p>
-                <p><strong>Mobile:</strong> ${data.mobile}</p>
-                <p><strong>Status:</strong> Approved</p>
-            `;
-
-            approvedBox.appendChild(card);
-        });
-    });
-}
-         
-  // --- APPROVE LOGIC ---
-  async function approveStaff(id) {
-    if (!confirm("Bhai, is staff ko approve kar dein?")) return;
-
-    // Optional: Button ko "Processing..." state mein daal sakte ho
-    try {
-        const docRef = db.collection("staffRequests").doc(id);
-        const docSnap = await docRef.get();
-        const data = docSnap.data();
-        
-        await db.collection("staff").doc(id).set({ ...data, status: "approved" });
-        
-
-        // location.reload(); // ISE HATA DENA!
-        alert("Staff Approved ✅");
-    } catch (err) {
-        alert("Error: " + err.message);
-    }
-}
-
-
-
-  function deleteRequest(id) {
-      if(confirm("Reject kar dein?")) {
-          db.collection("staffRequests").doc(id).delete()
-          .then(() => alert("Request Rejected."));
-      }
-  }
 </script>
-
-
 </body>
 </html>
+￼Enter
