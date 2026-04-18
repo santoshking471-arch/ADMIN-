@@ -219,7 +219,7 @@
         const data = docSnap.data();
         
         await db.collection("staff").doc(id).set({ ...data, status: "approved" });
-        await docRef.delete();
+        
 
         // location.reload(); // ISE HATA DENA!
         alert("Staff Approved ✅");
