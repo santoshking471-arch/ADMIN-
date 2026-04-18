@@ -132,30 +132,57 @@
       }
   });
 
-  function loadStaffCards(){
-      const container = document.getElementById("cardsContainer");
-      // staffRequests collection se data uthana hai jo register se aaya hai
-      db.collection("staffRequests").onSnapshot(snapshot => {
-          container.innerHTML = snapshot.empty ? "No requests found." : "";
-          snapshot.forEach(doc => {
-              const data = doc.data();
-              const card = document.createElement("div");
-              card.className = "staff-card";
+  function loadStaffCards() {
+    const container = document.getElementById("cardsContainer");
+    
+    db.collection("staffRequests").onSnapshot(snapshot => {
+        container.innerHTML = snapshot.empty ? "No requests found." : "";
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            
+            // 1. Card ka main div banao
+            const card = document.createElement("div");
+            card.className = "staff-card";
 
-              card.innerHTML = `
+            // 2. Sirf text content innerHTML se dalo
+            card.innerHTML = `
                 <h3>${data.fullName}</h3>
                 <p><strong>Email:</strong> ${data.email}</p>
                 <p><strong>Mobile:</strong> ${data.mobile}</p>
                 <p><strong>Status:</strong> ${data.status || 'Pending'}</p>
-                <button class="approve-btn" onclick="approveStaff('${doc.id}')">Approve Now</button>
+            `;
 
-                <button class="deny-btn" onclick="deleteRequest('${doc.id}')">Reject</button>
-              `;
-              container.appendChild(card);
-          });
-      });
-  }
+            // 3. Ab yahan wo Button Container wala code lagao
+            const btnContainer = document.createElement("div");
+            btnContainer.style.display = "flex";
+            btnContainer.style.gap = "10px";
+            btnContainer.style.marginTop = "15px"; // Thodi space ke liye
 
+            // Approve Button
+            const approveBtn = document.createElement("button");
+            approveBtn.className = "approve-btn";
+            approveBtn.textContent = "Approve Now";
+            approveBtn.style.flex = "1"; // Dono button barabar size ke honge
+            approveBtn.onclick = () => approveStaff(doc.id);
+
+            // Reject Button
+            const denyBtn = document.createElement("button");
+            denyBtn.className = "deny-btn";
+            denyBtn.textContent = "Reject";
+            denyBtn.style.flex = "1";
+            denyBtn.onclick = () => deleteRequest(doc.id);
+
+            // 4. Sabko append (jodna) karo
+            btnContainer.appendChild(approveBtn);
+            btnContainer.appendChild(denyBtn);
+            card.appendChild(btnContainer);
+            
+            container.appendChild(card);
+        });
+    });
+}
+         
   // --- APPROVE LOGIC ---
   function approveStaff(id) {
     if(confirm("Bhai, is staff ko approve kar dein?")) {
